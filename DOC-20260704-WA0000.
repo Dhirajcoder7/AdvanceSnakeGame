@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DGSnake | Premium Snake Experience</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: {
+                            900: '#060B19', // Deep navy background
+                            800: '#0B132B', // Slate cards
+                            700: '#1C2541', // Lighter slate
+                        },
+                        royal: {
+                            500: '#3A506B', // Sub accent
+                            600: '#2A6BFF', // Royal blue accent
+                            700: '#1A5BFF',
+                        },
+                        lightbg: '#F3F4F6',
+                        lightcard: '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base Theme Variables */
+        :root {
+            --bg-color: #060B19;
+            --card-bg: #0B132B;
+            --card-border: rgba(255, 255, 255, 0.05);
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+            --accent: #2A6BFF;
+            --accent-glow: rgba(42, 107, 255, 0.4);
+            --danger: #EF4444;
+            --danger-glow: rgba(239, 68, 68, 0.4);
+            --success: #10B981;
+            --glass-bg: rgba(11, 19, 43, 0.85);
+        }
+
+        .theme-light {
+            --bg-color: #F1F5F9;
+            --card-bg: #FFFFFF;
+            --card-border: rgba(0, 0, 0, 0.05);
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent: #1D4ED8;
+            --accent-glow: rgba(29, 78, 216, 0.3);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Screens & Transitions */
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.98);
+            z-index: 10;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+
+        /* Premium UI Components */
+        .premium-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+        }
+
+        .premium-btn {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            display: flex;
+            aliggn-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .premium-btn:active {
+            transform: scale(0.96);
+        }
+
+        .premium-btn-primary {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .premium-btn-primary:active {
+            transform: scale(0.96);
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+        
+        .premium-btn-danger {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px var(--danger-glow);
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background-color: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        /* Game Specific */
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
+            border-radius: 16px;
+            background-color: var(--card-bg);
+            border: 2px solid var(--card-border);
+            box-shadow: 0 0 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Controls */
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+        
+        .dpad-btn {
+            aspect-ratio: 1;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            transition: all 0.1s;
+        }
+
+        .dpad-btn:active {
+            background-color: var(--accent);
+            color: white;
+            transform: scale(0.9);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* Modals */
+        #modal-container {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        #modal-container.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #modal-container.active .modal-content {
+            transform: translateY(0);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.95); opacity: 0.8; }
+        }
+        
+        .food-pulse {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        /* Scrollbar hidden */
+        ::-webkit-scrollbar { display: none; }
+        
+        /* Inputs */
+        input[type="text"] {
+            background: rgba(0,0,0,0.1);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        .theme-light input[type="text"] {
+            background: rgba(0,0,0,0.03);
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: var(--accent);
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. SETUP SCREEN -->
+    <div id="screen-setup" class="screen p-6 justify-center items-center">
+        <div class="premium-card p-8 w-full max-w-sm text-center">
+            <div class="w-20 h-20 bg-[var(--accent)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_var(--accent-glow)]">
+                <i data-lucide="ghost" class="text-white w-10 h-10"></i>
+            </div>
+            <h1 class="text-2xl font-bold mb-2">Welcome to DGSnake</h1>
+            <p class="text-[var(--text-muted)] text-sm mb-8">A premium snake experience.</p>
+            
+            <div class="text-left mb-6">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Enter Player Name</label>
+                <input type="text" id="input-player-name" maxlength="15" placeholder="Player1" class="w-full px-4 py-3 rounded-xl text-lg font-medium transition-all">
+            </div>
+            
+            <button id="btn-save-name" class="premium-btn premium-btn-primary w-full py-4 rounded-xl font-bold text-lg">
+                Continue
+                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. HOME SCREEN -->
+    <div id="screen-home" class="screen p-6 flex flex-col max-w-md mx-auto w-full">
+        <div class="flex justify-between items-center mt-8 mb-12">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center shadow-[0_0_20px_var(--accent-glow)]">
+                    <i data-lucide="ghost" class="text-white w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight">DGSnake</h1>
+                    <p id="display-player-name" class="text-[var(--text-muted)] text-sm font-medium">Player</p>
+                </div>
+            </div>
+            <button id="btn-theme-toggle" class="premium-btn w-12 h-12 rounded-full">
+                <i data-lucide="moon" class="w-5 h-5 theme-icon"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-10">
+            <div class="premium-card p-5 rounded-2xl flex flex-col justify-center">
+                <span class="text-[var(--text-muted)] text-xs font-bold uppercase tracking-wider mb-1">Best Score</span>
+                <span id="stat-best-score" class="text-3xl font-extrabold text-[var(--accent)]">0</span>
+            </div>
+            <div class="premium-card p-5 rounded-2xl flex flex-col justify-center">
+                <span class="text-[var(--text-muted)] text-xs font-bold uppercase tracking-wider mb-1">Total Games</span>
+                <span id="stat-total-games" class="text-3xl font-extrabold">0</span>
+            </div>
+        </div>
+
+        <div class="mt-auto mb-10 flex flex-col gap-4">
+            <button id="btn-play" class="premium-btn premium-btn-primary w-full py-5 rounded-2xl font-bold text-xl mb-4">
+                <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+                PLAY GAME
+            </button>
+            <div class="grid grid-cols-2 gap-4">
+                <button id="btn-go-history" class="premium-btn w-full py-4 rounded-xl font-semibold">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+                    History
+                </button>
+                <button id="btn-go-settings" class="premium-btn w-full py-4 rounded-xl font-semibold">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. GAME SCREEN -->
+    <div id="screen-game" class="screen flex flex-col">
+        <!-- Game Header -->
+        <div class="flex justify-between items-center p-6 w-full max-w-[500px] mx-auto">
+            <div class="flex gap-4">
+                <div class="flex flex-col">
+                    <span class="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-wider">Score</span>
+                    <span id="game-score" class="text-2xl font-extrabold leading-none">0</span>
+                </div>
+                <div class="w-px bg-[var(--card-border)]"></div>
+                <div class="flex flex-col">
+                    <span class="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-wider">Level</span>
+                    <span id="game-level" class="text-2xl font-extrabold leading-none text-[var(--accent)]">1</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button id="btn-game-pause" class="premium-btn w-10 h-10 rounded-lg">
+                    <i data-lucide="pause" class="w-4 h-4 fill-current"></i>
+                </button>
+                <button id="btn-game-home" class="premium-btn w-10 h-10 rounded-lg">
+                    <i data-lucide="home" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="px-4 w-full flex-shrink-0">
+            <div id="game-container">
+                <canvas id="gameCanvas" width="500" height="500"></canvas>
+            </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div id="controls-area" class="flex-grow flex flex-col justify-center p-4 w-full max-w-[500px] mx-auto opacity-0 transition-opacity duration-300">
+            <div class="control-grid">
+                <div></div>
+                <button class="dpad-btn" data-dir="up"><i data-lucide="chevron-up" class="w-8 h-8"></i></button>
+                <div></div>
+                <button class="dpad-btn" data-dir="left"><i data-lucide="chevron-left" class="w-8 h-8"></i></button>
+                <button class="dpad-btn" data-dir="down"><i data-lucide="chevron-down" class="w-8 h-8"></i></button>
+                <button class="dpad-btn" data-dir="right"><i data-lucide="chevron-right" class="w-8 h-8"></i></button>
+            </div>
+            <p id="swipe-hint" class="text-center text-[var(--text-muted)] text-sm mt-6 font-medium tracking-wide">
+                Swipe anywhere to move
+            </p>
+        </div>
+    </div>
+
+    <!-- 4. SETTINGS SCREEN -->
+    <div id="screen-settings" class="screen p-6 max-w-md mx-auto w-full">
+        <div class="flex items-center gap-4 mt-8 mb-8">
+            <button class="btn-back premium-btn w-10 h-10 rounded-full flex-shrink-0">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h2 class="text-2xl font-bold">Settings</h2>
+        </div>
+
+        <div class="overflow-y-auto h-full pb-24 pr-2 space-y-6">
+            
+            <!-- Player Info -->
+            <div class="premium-card p-5">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">Player</h3>
+                <div class="flex gap-3">
+                    <input type="text" id="setting-player-name" class="flex-grow px-3 py-2 rounded-lg text-sm" placeholder="Player Name">
+                    <button id="btn-update-name" class="premium-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Update</button>
+                </div>
+            </div>
+
+            <!-- Gameplay -->
+            <div class="premium-card p-0 overflow-hidden">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] px-5 pt-5 pb-2">Gameplay</h3>
+                
+                <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--card-border)]">
+                    <div>
+                        <div class="font-semibold text-sm">Control Style</div>
+                        <div class="text-[10px] text-[var(--text-muted)]">Swipe or Buttons</div>
+                    </div>
+                    <select id="setting-controls" class="bg-transparent border border-[var(--card-border)] text-sm rounded-lg px-2 py-1 focus:outline-none focus:border-[var(--accent)]">
+                        <option value="swipe" class="text-black">Swipe</option>
+                        <option value="buttons" class="text-black">Buttons</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--card-border)]">
+                    <div>
+                        <div class="font-semibold text-sm">Wall Collision</div>
+                        <div class="text-[10px] text-[var(--text-muted)]">Die on wall hit</div>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="setting-walls" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200" style="border-color: var(--card-bg);"/>
+                        <label for="setting-walls" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-400 cursor-pointer transition-colors duration-200"></label>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center px-5 py-4 border-b border-[var(--card-border)]">
+                    <div>
+                        <div class="font-semibold text-sm">Sound Effects</div>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="setting-sound" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200" style="border-color: var(--card-bg);"/>
+                        <label for="setting-sound" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-400 cursor-pointer transition-colors duration-200"></label>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center px-5 py-4">
+                    <div>
+                        <div class="font-semibold text-sm">Haptics</div>
+                        <div class="text-[10px] text-[var(--text-muted)]">Vibration feedback</div>
+                    </div>
+                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" id="setting-haptics" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer z-10 transition-transform duration-200" style="border-color: var(--card-bg);"/>
+                        <label for="setting-haptics" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-400 cursor-pointer transition-colors duration-200"></label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="premium-card p-5 border border-red-500/20">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-red-500 mb-4">Danger Zone</h3>
+                <div class="flex flex-col gap-3">
+                    <button id="btn-reset-history" class="premium-btn w-full py-3 rounded-lg text-sm text-red-400 hover:bg-red-500/10 border-red-500/20">
+                        Clear Score History
+                    </button>
+                    <button id="btn-reset-all" class="premium-btn w-full py-3 rounded-lg text-sm bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/30 font-semibold">
+                        Factory Reset Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. HISTORY SCREEN -->
+    <div id="screen-history" class="screen p-6 max-w-md mx-auto w-full">
+        <div class="flex items-center gap-4 mt-8 mb-6">
+            <button class="btn-back premium-btn w-10 h-10 rounded-full flex-shrink-0">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h2 class="text-2xl font-bold">History & Stats</h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="premium-card p-4 rounded-xl">
+                <div class="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Avg Score</div>
+                <div id="stat-avg-score" class="text-xl font-bold">0</div>
+            </div>
+            <div class="premium-card p-4 rounded-xl">
+                <div class="text-[10px] text-[var(--text-muted)] uppercase font-bold mb-1">Play Time</div>
+                <div id="stat-play-time" class="text-xl font-bold">0m</div>
+            </div>
+        </div>
+
+        <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-3 pl-1">Recent Games</h3>
+        <div id="history-list" class="space-y-3 overflow-y-auto pb-24 pr-2 h-[calc(100vh-280px)]">
+            <!-- Dynamic History Cards Go Here -->
+        </div>
+    </div>
+
+    <!-- MODAL CONTAINER (Global) -->
+    <div id="modal-container" class="glass">
+        <div id="modal-content" class="modal-content premium-card p-6 w-[90%] max-w-sm flex flex-col items-center text-center">
+            <!-- Injected dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // --- 1. STATE & STORAGE MANAGEMENT ---
+        const DEFAULT_DATA = {
+            profile: { name: '' },
+            settings: { 
+                theme: 'dark', 
+                controls: 'swipe', 
+                walls: true, 
+                sound: true, 
+                haptics: true 
+            },
+            stats: { 
+                totalGames: 0, 
+                highScore: 0, 
+                totalTimeSecs: 0, 
+                history: [] 
+            }
+        };
+
+        const Storage = {
+            key: 'dgsnake_data_v1',
+            data: null,
+            init() {
+                const stored = localStorage.getItem(this.key);
+                if (stored) {
+                    try {
+                        this.data = JSON.parse(stored);
+                        // Merge missing keys in case of update
+                        this.data.settings = { ...DEFAULT_DATA.settings, ...this.data.settings };
+                        this.data.stats = { ...DEFAULT_DATA.stats, ...this.data.stats };
+                    } catch (e) {
+                        this.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                    }
+                } else {
+                    this.data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                }
+            },
+            save() {
+                localStorage.setItem(this.key, JSON.stringify(this.data));
+            },
+            addHistory(score, level, durationSecs) {
+                this.data.stats.totalGames++;
+                this.data.stats.totalTimeSecs += durationSecs;
+                if (score > this.data.stats.highScore) {
+                    this.data.stats.highScore = score;
+                }
+                
+                const entry = {
+                    date: new Date().toISOString(),
+                    score,
+                    level,
+                    duration: durationSecs
+                };
+                
+                this.data.stats.history.unshift(entry);
+                if (this.data.stats.history.length > 50) { // Keep last 50 games
+                    this.data.stats.history.pop();
+                }
+                this.save();
+            }
+        };
+
+        // --- 2. AUDIO & HAPTICS SYSTEM ---
+        const FX = {
+            audioCtx: null,
+            init() {
+                if (!this.audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if(AudioContext) this.audioCtx = new AudioContext();
+                }
+            },
+            playTone(freq, type, duration, volLevel = 0.1) {
+                if (!Storage.data.settings.sound || !this.audioCtx) return;
+                try {
+                    const oscillator = this.audioCtx.createOscillator();
+                    const gainNode = this.audioCtx.createGain();
+                    oscillator.type = type;
+                    oscillator.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+                    
+                    gainNode.gain.setValueAtTime(volLevel, this.audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioCtx.destination);
+                    
+                    oscillator.start();
+                    oscillator.stop(this.audioCtx.currentTime + duration);
+                } catch(e){}
+            },
+            vibrate(pattern) {
+                if (!Storage.data.settings.haptics || !navigator.vibrate) return;
+                navigator.vibrate(pattern);
+            },
+            eat() {
+                this.playTone(600, 'sine', 0.1, 0.1);
+                this.playTone(800, 'sine', 0.15, 0.1);
+                this.vibrate(20);
+            },
+            die() {
+                this.playTone(150, 'sawtooth', 0.5, 0.2);
+                this.playTone(100, 'sawtooth', 0.6, 0.2);
+                this.vibrate([50, 50, 100]);
+            },
+            click() {
+                this.playTone(400, 'sine', 0.05, 0.05);
+                this.vibrate(10);
+            },
+            levelUp() {
+                this.playTone(400, 'square', 0.1, 0.1);
+                setTimeout(() => this.playTone(600, 'square', 0.1, 0.1), 100);
+                setTimeout(() => this.playTone(800, 'square', 0.2, 0.1), 200);
+                this.vibrate([30, 30, 50]);
+            }
+        };
+
+        // --- 3. GAME ENGINE ---
+        const Engine = {
+            canvas: null,
+            ctx: null,
+            gridSize: 20,
+            tileSize: 0,
+            
+            snake: [],
+            food: {},
+            dx: 0,
+            dy: -1,
+            nextDx: 0,
+            nextDy: -1,
+            
+            score: 0,
+            level: 1,
+            speed: 200, // ms per tick
+            
+            loopId: null,
+            lastTick: 0,
+            isPaused: false,
+            isPlaying: false,
+            startTime: 0,
+            
+            init() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+            },
+            
+            resize() {
+                // Ensure crisp rendering
+                const container = document.getElementById('game-container');
+                const size = container.clientWidth;
+                this.canvas.width = size;
+                this.canvas.height = size;
+                this.tileSize = size / this.gridSize;
+            },
+            
+            start() {
+                this.resize();
+                this.snake = [
+                    {x: 10, y: 10},
+                    {x: 10, y: 11},
+                    {x: 10, y: 12}
+                ];
+                this.dx = 0;
+                this.dy = -1;
+                this.nextDx = 0;
+                this.nextDy = -1;
+                this.score = 0;
+                this.level = 1;
+                this.speed = 220;
+                this.isPaused = false;
+                this.isPlaying = true;
+                this.startTime = Date.now();
+                
+                this.spawnFood();
+                UI.updateGameHeader(this.score, this.level);
+                
+                if (this.loopId) cancelAnimationFrame(this.loopId);
+                this.lastTick = window.performance.now();
+                this.loopId = requestAnimationFrame((t) => this.loop(t));
+                
+                FX.init();
+            },
+            
+            stop() {
+                this.isPlaying = false;
+                if(this.loopId) cancelAnimationFrame(this.loopId);
+            },
+            
+            pause() {
+                if(!this.isPlaying) return;
+                this.isPaused = true;
+            },
+            
+            resume() {
+                if(!this.isPlaying) return;
+                this.isPaused = false;
+                this.lastTick = window.performance.now();
+                this.loopId = requestAnimationFrame((t) => this.loop(t));
+            },
+            
+            spawnFood() {
+                let valid = false;
+                while (!valid) {
+                    this.food = {
+                        x: Math.floor(Math.random() * this.gridSize),
+                        y: Math.floor(Math.random() * this.gridSize)
+                    };
+                    valid = !this.snake.some(s => s.x === this.food.x && s.y === this.food.y);
+                }
+            },
+            
+            loop(timestamp) {
+                if (!this.isPlaying) return;
+                if (this.isPaused) return;
+
+                requestAnimationFrame((t) => this.loop(t));
+
+                const elapsed = timestamp - this.lastTick;
+                if (elapsed >= this.speed) {
+                    this.lastTick = timestamp;
+                    this.update();
+                }
+                
+                // Interpolated drawing for smoothness could go here, 
+                // but static draw inside loop is safer for performance on low-end
+                this.draw(); 
+            },
+            
+            update() {
+                this.dx = this.nextDx;
+                this.dy = this.nextDy;
+                
+                let head = { x: this.snake[0].x + this.dx, y: this.snake[0].y + this.dy };
+                
+                // Wall Collision Logic
+                if (Storage.data.settings.walls) {
+                    if (head.x < 0 || head.x >= this.gridSize || head.y < 0 || head.y >= this.gridSize) {
+                        this.gameOver();
+                        return;
+                    }
+                } else {
+                    // Wrap around
+                    if (head.x < 0) head.x = this.gridSize - 1;
+                    if (head.x >= this.gridSize) head.x = 0;
+                    if (head.y < 0) head.y = this.gridSize - 1;
+                    if (head.y >= this.gridSize) head.y = 0;
+                }
+                
+                // Self Collision
+                if (this.snake.some((s, index) => index !== this.snake.length-1 && s.x === head.x && s.y === head.y)) {
+                    this.gameOver();
+                    return;
+                }
+                
+                this.snake.unshift(head);
+                
+                // Eat food
+                if (head.x === this.food.x && head.y === this.food.y) {
+                    FX.eat();
+                    this.score++;
+                    
+                    // Level progression
+                    let newLevel = Math.floor(this.score / 5) + 1;
+                    if(newLevel > this.level) {
+                        this.level = newLevel;
+                        this.speed = Math.max(70, 220 - (this.level * 12)); // Speed cap
+                        FX.levelUp();
+                    }
+                    
+                    UI.updateGameHeader(this.score, this.level);
+                    this.spawnFood();
+                } else {
+                    this.snake.pop();
+                }
+            },
+            
+            draw() {
+                // Background
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Get theme colors from computed styles for canvas drawing
+                const accentColor = getComputedStyle(document.body).getPropertyValue('--accent').trim();
+                const dangerColor = getComputedStyle(document.body).getPropertyValue('--danger').trim();
+                
+                // Draw Food
+                const fx = this.food.x * this.tileSize;
+                const fy = this.food.y * this.tileSize;
+                const fPad = this.tileSize * 0.2;
+                
+                this.ctx.fillStyle = dangerColor;
+                this.ctx.shadowColor = dangerColor;
+                this.ctx.shadowBlur = 15;
+                this.ctx.beginPath();
+                this.ctx.roundRect(fx + fPad, fy + fPad, this.tileSize - (fPad*2), this.tileSize - (fPad*2), 8);
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0; // Reset
+                
+                // Draw Snake
+                const sPad = this.tileSize * 0.1;
+                
+                for(let i = this.snake.length - 1; i >= 0; i--) {
+                    const segment = this.snake[i];
+                    const sx = segment.x * this.tileSize;
+                    const sy = segment.y * this.tileSize;
+                    
+                    if (i === 0) {
+                        // Head
+                        this.ctx.fillStyle = accentColor;
+                        this.ctx.shadowColor = accentColor;
+                        this.ctx.shadowBlur = 12;
+                        this.ctx.beginPath();
+                        this.ctx.roundRect(sx + sPad, sy + sPad, this.tileSize - (sPad*2), this.tileSize - (sPad*2), 6);
+                        this.ctx.fill();
+                        this.ctx.shadowBlur = 0;
+                        
+                        // Eyes
+                        this.ctx.fillStyle = '#ffffff';
+                        let eyeSize = this.tileSize * 0.15;
+                        let offset1 = this.tileSize * 0.3;
+                        let offset2 = this.tileSize * 0.7;
+                        
+                        this.ctx.beginPath();
+                        if (this.dx === 1) { // Right
+                            this.ctx.arc(sx + offset2, sy + offset1, eyeSize, 0, Math.PI*2);
+                            this.ctx.arc(sx + offset2, sy + offset2, eyeSize, 0, Math.PI*2);
+                        } else if (this.dx === -1) { // Left
+                            this.ctx.arc(sx + offset1, sy + offset1, eyeSize, 0, Math.PI*2);
+                            this.ctx.arc(sx + offset1, sy + offset2, eyeSize, 0, Math.PI*2);
+                        } else if (this.dy === 1) { // Down
+                            this.ctx.arc(sx + offset1, sy + offset2, eyeSize, 0, Math.PI*2);
+                            this.ctx.arc(sx + offset2, sy + offset2, eyeSize, 0, Math.PI*2);
+                        } else { // Up
+                            this.ctx.arc(sx + offset1, sy + offset1, eyeSize, 0, Math.PI*2);
+                            this.ctx.arc(sx + offset2, sy + offset1, eyeSize, 0, Math.PI*2);
+                        }
+                        this.ctx.fill();
+                        
+                    } else {
+                        // Body
+                        // Interpolate color slightly darker for tail
+                        this.ctx.fillStyle = accentColor; 
+                        this.ctx.globalAlpha = Math.max(0.4, 1 - (i / this.snake.length) * 0.6);
+                        this.ctx.beginPath();
+                        this.ctx.roundRect(sx + sPad*1.5, sy + sPad*1.5, this.tileSize - (sPad*3), this.tileSize - (sPad*3), 4);
+                        this.ctx.fill();
+                        this.ctx.globalAlpha = 1;
+                    }
+                }
+            },
+            
+            gameOver() {
+                this.stop();
+                FX.die();
+                const duration = Math.floor((Date.now() - this.startTime) / 1000);
+                Storage.addHistory(this.score, this.level, duration);
+                
+                setTimeout(() => {
+                    UI.showModal('gameover', { score: this.score, level: this.level });
+                }, 300);
+            },
+            
+            setDirection(newDx, newDy) {
+                // Prevent reverse
+                if (this.dx === 0 && newDx === 0) return;
+                if (this.dy === 0 && newDy === 0) return;
+                
+                this.nextDx = newDx;
+                this.nextDy = newDy;
+                FX.init(); // Init audio on first interaction
+            }
+        };
+
+        // --- 4. INPUT HANDLING ---
+        const Input = {
+            touchStartX: 0,
+            touchStartY: 0,
+            threshold: 30, // px swipe distance
+            
+            init() {
+                // Keyboard
+                window.addEventListener('keydown', (e) => {
+                    if (!Engine.isPlaying || Engine.isPaused) return;
+                    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                    switch(e.key) {
+                        case 'ArrowUp': case 'w': Engine.setDirection(0, -1); break;
+                        case 'ArrowDown': case 's': Engine.setDirection(0, 1); break;
+                        case 'ArrowLeft': case 'a': Engine.setDirection(-1, 0); break;
+                        case 'ArrowRight': case 'd': Engine.setDirection(1, 0); break;
+                    }
+                });
+                
+                // Swipe
+                const gameContainer = document.getElementById('game-container');
+                gameContainer.addEventListener('touchstart', (e) => {
+                    if(Storage.data.settings.controls !== 'swipe' || !Engine.isPlaying) return;
+                    this.touchStartX = e.changedTouches[0].screenX;
+                    this.touchStartY = e.changedTouches[0].screenY;
+                    e.preventDefault(); // prevent scrolling
+                }, {passive: false});
+                
+                gameContainer.addEventListener('touchmove', (e) => e.preventDefault(), {passive: false}); // Prevent scroll while touching canvas
+                
+                gameContainer.addEventListener('touchend', (e) => {
+                    if(Storage.data.settings.controls !== 'swipe' || !Engine.isPlaying) return;
+                    const touchEndX = e.changedTouches[0].screenX;
+                    const touchEndY = e.changedTouches[0].screenY;
+                    this.handleSwipe(touchEndX, touchEndY);
+                }, {passive: false});
+
+                // D-Pad
+                document.querySelectorAll('.dpad-btn').forEach(btn => {
+                    btn.addEventListener('pointerdown', (e) => {
+                        e.preventDefault();
+                        const dir = btn.dataset.dir;
+                        if(dir === 'up') Engine.setDirection(0, -1);
+                        if(dir === 'down') Engine.setDirection(0, 1);
+                        if(dir === 'left') Engine.setDirection(-1, 0);
+                        if(dir === 'right') Engine.setDirection(1, 0);
+                    });
+                });
+            },
+            
+            handleSwipe(endX, endY) {
+                const dx = endX - this.touchStartX;
+                const dy = endY - this.touchStartY;
+                
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    if (Math.abs(dx) > this.threshold) {
+                        if (dx > 0) Engine.setDirection(1, 0);
+                        else Engine.setDirection(-1, 0);
+                    }
+                } else {
+                    if (Math.abs(dy) > this.threshold) {
+                        if (dy > 0) Engine.setDirection(0, 1);
+                        else Engine.setDirection(0, -1);
+                    }
+                }
+            }
+        };
+
+        // --- 5. UI MANAGER ---
+        const UI = {
+            screens: ['setup', 'home', 'game', 'settings', 'history'],
+            
+            init() {
+                lucide.createIcons();
+                this.bindEvents();
+                this.applyTheme(Storage.data.settings.theme);
+                
+                if (!Storage.data.profile.name) {
+                    this.switchScreen('setup');
+                } else {
+                    this.updateHomeStats();
+                    this.switchScreen('home');
+                }
+            },
+            
+            bindEvents() {
+                // Setup
+                document.getElementById('btn-save-name').addEventListener('click', () => {
+                    FX.click();
+                    const name = document.getElementById('input-player-name').value.trim();
+                    if(name.length >= 2) {
+                        Storage.data.profile.name = name;
+                        Storage.save();
+                        this.updateHomeStats();
+                        this.switchScreen('home');
+                    } else {
+                        // Shake input (simple visual error)
+                        const input = document.getElementById('input-player-name');
+                        input.style.transform = 'translateX(10px)';
+                        setTimeout(()=> input.style.transform = 'translateX(-10px)', 100);
+                        setTimeout(()=> input.style.transform = 'translateX(0)', 200);
+                    }
+                });
+
+                // Home Navigation
+                document.getElementById('btn-play').addEventListener('click', () => {
+                    FX.click();
+                    this.switchScreen('game');
+                    this.setupGameUI();
+                    Engine.start();
+                });
+                document.getElementById('btn-go-settings').addEventListener('click', () => {
+                    FX.click();
+                    this.populateSettings();
+                    this.switchScreen('settings');
+                });
+                document.getElementById('btn-go-history').addEventListener('click', () => {
+                    FX.click();
+                    this.populateHistory();
+                    this.switchScreen('history');
+                });
+                document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+                    FX.click();
+                    const newTheme = Storage.data.settings.theme === 'dark' ? 'light' : 'dark';
+                    Storage.data.settings.theme = newTheme;
+                    Storage.save();
+                    this.applyTheme(newTheme);
+                });
+
+                // Back Buttons
+                document.querySelectorAll('.btn-back').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        FX.click();
+                        this.updateHomeStats();
+                        this.switchScreen('home');
+                    });
+                });
+
+                // Game Buttons
+                document.getElementById('btn-game-pause').addEventListener('click', () => {
+                    FX.click();
+                    Engine.pause();
+                    this.showModal('pause');
+                });
+                document.getElementById('btn-game-home').addEventListener('click', () => {
+                    FX.click();
+                    Engine.pause();
+                    this.showModal('quit');
+                });
+
+                // Settings Interactivity
+                document.getElementById('btn-update-name').addEventListener('click', () => {
+                    FX.click();
+                    const name = document.getElementById('setting-player-name').value.trim();
+                    if(name.length >= 2) {
+                        Storage.data.profile.name = name;
+                        Storage.save();
+                        const btn = document.getElementById('btn-update-name');
+                        btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                        setTimeout(() => btn.innerText = 'Update', 2000);
+                    }
+                });
+                
+                const saveSettings = () => {
+                    Storage.data.settings.controls = document.getElementById('setting-controls').value;
+                    Storage.data.settings.walls = document.getElementById('setting-walls').checked;
+                    Storage.data.settings.sound = document.getElementById('setting-sound').checked;
+                    Storage.data.settings.haptics = document.getElementById('setting-haptics').checked;
+                    Storage.save();
+                };
+                
+                document.getElementById('setting-controls').addEventListener('change', saveSettings);
+                document.getElementById('setting-walls').addEventListener('change', saveSettings);
+                document.getElementById('setting-sound').addEventListener('change', saveSettings);
+                document.getElementById('setting-haptics').addEventListener('change', saveSettings);
+                
+                document.getElementById('btn-reset-history').addEventListener('click', () => {
+                    FX.click();
+                    this.showModal('confirm', {
+                        title: 'Clear History',
+                        text: 'This will delete all past scores and stats. Are you sure?',
+                        action: () => {
+                            Storage.data.stats = JSON.parse(JSON.stringify(DEFAULT_DATA.stats));
+                            Storage.save();
+                        }
+                    });
+                });
+                
+                document.getElementById('btn-reset-all').addEventListener('click', () => {
+                    FX.click();
+                    this.showModal('confirm', {
+                        title: 'Factory Reset',
+                        text: 'This deletes everything, including your name and settings.',
+                        action: () => {
+                            localStorage.removeItem(Storage.key);
+                            location.reload();
+                        }
+                    });
+                });
+            },
+            
+            switchScreen(screenId) {
+                this.screens.forEach(s => {
+                    document.getElementById(`screen-${s}`).classList.remove('active');
+                });
+                document.getElementById(`screen-${screenId}`).classList.add('active');
+                
+                if (screenId === 'game') {
+                    // Trigger canvas resize after animation completes to ensure correct dimensions
+                    setTimeout(() => Engine.resize(), 50); 
+                }
+            },
+            
+            applyTheme(theme) {
+                if (theme === 'light') {
+                    document.body.classList.add('theme-light');
+                    document.querySelector('.theme-icon').setAttribute('data-lucide', 'sun');
+                } else {
+                    document.body.classList.remove('theme-light');
+                    document.querySelector('.theme-icon').setAttribute('data-lucide', 'moon');
+                }
+                lucide.createIcons();
+            },
+            
+            updateHomeStats() {
+                document.getElementById('display-player-name').innerText = Storage.data.profile.name;
+                document.getElementById('stat-best-score').innerText = Storage.data.stats.highScore;
+                document.getElementById('stat-total-games').innerText = Storage.data.stats.totalGames;
+            },
+            
+            setupGameUI() {
+                const controlsArea = document.getElementById('controls-area');
+                const swipeHint = document.getElementById('swipe-hint');
+                const dpad = document.querySelector('.control-grid');
+                
+                controlsArea.style.opacity = '1';
+                if (Storage.data.settings.controls === 'buttons') {
+                    dpad.style.display = 'grid';
+                    swipeHint.style.display = 'none';
+                } else {
+                    dpad.style.display = 'none';
+                    swipeHint.style.display = 'block';
+                }
+            },
+            
+            updateGameHeader(score, level) {
+                document.getElementById('game-score').innerText = score;
+                document.getElementById('game-level').innerText = level;
+            },
+            
+            populateSettings() {
+                document.getElementById('setting-player-name').value = Storage.data.profile.name;
+                document.getElementById('setting-controls').value = Storage.data.settings.controls;
+                document.getElementById('setting-walls').checked = Storage.data.settings.walls;
+                document.getElementById('setting-sound').checked = Storage.data.settings.sound;
+                document.getElementById('setting-haptics').checked = Storage.data.settings.haptics;
+            },
+            
+            populateHistory() {
+                const s = Storage.data.stats;
+                const avg = s.totalGames > 0 ? (s.history.reduce((acc, curr) => acc + curr.score, 0) / s.history.length).toFixed(1) : '0';
+                const timeMins = Math.floor(s.totalTimeSecs / 60);
+                
+                document.getElementById('stat-avg-score').innerText = avg;
+                document.getElementById('stat-play-time').innerText = timeMins + 'm';
+                
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
+                
+                if (s.history.length === 0) {
+                    list.innerHTML = `<div class="text-center text-[var(--text-muted)] text-sm py-10">No games played yet.</div>`;
+                    return;
+                }
+                
+                s.history.forEach((game, idx) => {
+                    const date = new Date(game.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                    const time = new Date(game.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                    
+                    const el = document.createElement('div');
+                    el.className = 'premium-card p-4 flex justify-between items-center rounded-xl';
+                    el.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-[var(--card-bg)] border border-[var(--card-border)] flex items-center justify-center text-xs font-bold">
+                                #${s.totalGames - idx}
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold">${date} <span class="text-[10px] text-[var(--text-muted)] ml-1">${time}</span></div>
+                                <div class="text-[10px] text-[var(--text-muted)] font-medium">Level ${game.level} • ${game.duration}s</div>
+                            </div>
+                        </div>
+                        <div class="text-xl font-extrabold text-[var(--accent)]">${game.score}</div>
+                    `;
+                    list.appendChild(el);
+                });
+            },
+            
+            showModal(type, data = null) {
+                const modal = document.getElementById('modal-container');
+                const content = document.getElementById('modal-content');
+                let html = '';
+                
+                // Clear old listeners
+                const newContent = content.cloneNode(true);
+                content.parentNode.replaceChild(newContent, content);
+                const activeContent = document.getElementById('modal-content');
+
+                if (type === 'pause') {
+                    html = `
+                        <i data-lucide="pause-circle" class="w-12 h-12 text-[var(--text-muted)] mb-4"></i>
+                        <h2 class="text-2xl font-bold mb-6">Game Paused</h2>
+                        <div class="flex flex-col gap-3 w-full">
+                            <button id="modal-btn-resume" class="premium-btn-primary py-3 rounded-xl font-bold w-full">Resume</button>
+                            <button id="modal-btn-quit" class="premium-btn py-3 rounded-xl font-bold w-full text-red-500">Quit Game</button>
+                        </div>
+                    `;
+                } else if (type === 'quit') {
+                    html = `
+                        <i data-lucide="alert-circle" class="w-12 h-12 text-yellow-500 mb-4"></i>
+                        <h2 class="text-xl font-bold mb-2">Abandon Game?</h2>
+                        <p class="text-[var(--text-muted)] text-sm mb-6">Current progress will be lost.</p>
+                        <div class="flex gap-3 w-full">
+                            <button id="modal-btn-cancel" class="premium-btn py-3 rounded-xl font-bold flex-1">Cancel</button>
+                            <button id="modal-btn-confirm" class="premium-btn-danger py-3 rounded-xl font-bold flex-1">Quit</button>
+                        </div>
+                    `;
+                } else if (type === 'gameover') {
+                    const isHighScore = data.score > 0 && data.score >= Storage.data.stats.highScore;
+                    html = `
+                        <div class="w-16 h-16 bg-[var(--card-bg)] rounded-2xl flex items-center justify-center mb-4 border border-[var(--card-border)] ${isHighScore ? 'shadow-[0_0_30px_var(--accent-glow)]' : ''}">
+                            <i data-lucide="${isHighScore ? 'trophy' : 'skull'}" class="w-8 h-8 ${isHighScore ? 'text-yellow-400' : 'text-[var(--text-muted)]'}"></i>
+                        </div>
+                        <h2 class="text-2xl font-black mb-1">${isHighScore ? 'NEW BEST!' : 'GAME OVER'}</h2>
+                        <p class="text-[var(--text-muted)] text-sm mb-6">Level ${data.level} Reached</p>
+                        <div class="text-5xl font-extrabold text-[var(--accent)] mb-8">${data.score}</div>
+                        
+                        <div class="flex gap-3 w-full">
+                            <button id="modal-btn-home" class="premium-btn py-4 rounded-xl font-bold flex-1">Home</button>
+                            <button id="modal-btn-restart" class="premium-btn-primary py-4 rounded-xl font-bold flex-1">Play Again</button>
+                        </div>
+                    `;
+                } else if (type === 'confirm') {
+                    html = `
+                        <i data-lucide="alert-triangle" class="w-12 h-12 text-red-500 mb-4"></i>
+                        <h2 class="text-xl font-bold mb-2">${data.title}</h2>
+                        <p class="text-[var(--text-muted)] text-sm mb-6">${data.text}</p>
+                        <div class="flex gap-3 w-full">
+                            <button id="modal-btn-cancel" class="premium-btn py-3 rounded-xl font-bold flex-1">Cancel</button>
+                            <button id="modal-btn-confirm" class="premium-btn-danger py-3 rounded-xl font-bold flex-1">Confirm</button>
+                        </div>
+                    `;
+                }
+
+                activeContent.innerHTML = html;
+                lucide.createIcons();
+                modal.classList.add('active');
+
+                // Bind modal events
+                if(document.getElementById('modal-btn-resume')) {
+                    document.getElementById('modal-btn-resume').onclick = () => { FX.click(); this.closeModal(); Engine.resume(); };
+                }
+                if(document.getElementById('modal-btn-quit')) {
+                    document.getElementById('modal-btn-quit').onclick = () => { FX.click(); this.closeModal(); Engine.stop(); this.updateHomeStats(); this.switchScreen('home'); };
+                }
+                if(document.getElementById('modal-btn-cancel')) {
+                    document.getElementById('modal-btn-cancel').onclick = () => { 
+                        FX.click(); 
+                        this.closeModal(); 
+                        if(type === 'quit') Engine.resume(); 
+                    };
+                }
+                if(document.getElementById('modal-btn-confirm')) {
+                    document.getElementById('modal-btn-confirm').onclick = () => { 
+                        FX.click(); 
+                        this.closeModal(); 
+                        if(type === 'quit') {
+                            Engine.stop();
+                            this.updateHomeStats();
+                            this.switchScreen('home');
+                        } else if (data && data.action) {
+                            data.action();
+                        }
+                    };
+                }
+                if(document.getElementById('modal-btn-home')) {
+                    document.getElementById('modal-btn-home').onclick = () => { FX.click(); this.closeModal(); this.updateHomeStats(); this.switchScreen('home'); };
+                }
+                if(document.getElementById('modal-btn-restart')) {
+                    document.getElementById('modal-btn-restart').onclick = () => { FX.click(); this.closeModal(); Engine.start(); };
+                }
+            },
+            
+            closeModal() {
+                document.getElementById('modal-container').classList.remove('active');
+            }
+        };
+
+        // --- INIT ---
+        window.onload = () => {
+            Storage.init();
+            UI.init();
+            Engine.init();
+            Input.init();
+        };
+
+    </script>
+</body>
+</html>
