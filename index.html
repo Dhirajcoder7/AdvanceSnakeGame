@@ -41,18 +41,18 @@
     <style>
         /* Base Theme Variables */
         :root {
-            --bg-color: #060B19;
-            --card-bg: #0B132B;
-            --card-border: rgba(255, 255, 255, 0.05);
-            --text-main: #FFFFFF;
-            --text-muted: #94A3B8;
-            --accent: #2A6BFF;
-            --accent-glow: rgba(42, 107, 255, 0.4);
-            --danger: #EF4444;
-            --danger-glow: rgba(239, 68, 68, 0.4);
-            --success: #10B981;
-            --glass-bg: rgba(11, 19, 43, 0.85);
-        }
+    --bg-color: #060B19;
+    --card-bg: #0B111E;
+    --card-border: #0098c6;
+    --text-main: #FFFFFF;
+    --text-muted: #94A3B8;
+    --accent: #00B4D8;
+    --accent-glow: rgba(0, 180, 216, 0.25);
+    --danger: #EF4444;
+    --danger-glow: rgba(239, 68, 68, 0.2);
+    --success: #10B981;
+    --glass-bg: rgba(6, 11, 25, 0.85);
+}
 
         .theme-light {
             --bg-color: #F1F5F9;
@@ -98,7 +98,7 @@
         /* Premium UI Components */
         .premium-card {
             background-color: var(--card-bg);
-            border: 1px solid var(--card-border);
+            border: 1.5px solid var(--card-border);
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
             border-radius: 20px;
         }
@@ -109,7 +109,7 @@
             color: var(--text-main);
             transition: all 0.2s ease;
             display: flex;
-            aliggn-items: center;
+            align-items: center;
             justify-content: center;
             gap: 8px;
         }
@@ -145,18 +145,31 @@
         }
 
         /* Game Specific */
-        #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            aspect-ratio: 1/1;
-            margin: 0 auto;
-            border-radius: 16px;
-            background-color: var(--card-bg);
-            border: 2px solid var(--card-border);
-            box-shadow: 0 0 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
+      #game-container{
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 1;
+    margin: auto;
+    overflow: hidden;
+
+    border-radius: 22px;
+
+    /* Theme based */
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--card-bg) 88%, white),
+        var(--card-bg)
+    );
+
+    border: 2px solid var(--card-border);
+
+    box-shadow:
+        0 0 18px var(--accent-glow),
+        0 18px 45px rgba(0,0,0,.18);
+
+    transition: .35s ease;
+}
 
         canvas {
             display: block;
@@ -174,7 +187,7 @@
         }
         
         .dpad-btn {
-            aspect-ratio: 1;
+            aspect-ratio: 1.1;
             border-radius: 16px;
             display: flex;
             align-items: center;
@@ -237,6 +250,7 @@
             background: rgba(0,0,0,0.1);
             border: 1px solid var(--card-border);
             color: var(--text-main);
+            width: 100%;
         }
         input[type="text"]:focus {
             outline: none;
@@ -263,7 +277,8 @@
     <div id="screen-setup" class="screen p-6 justify-center items-center">
         <div class="premium-card p-8 w-full max-w-sm text-center">
             <div class="w-20 h-20 bg-[var(--accent)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_var(--accent-glow)]">
-                <i data-lucide="ghost" class="text-white w-10 h-10"></i>
+                <!-- <i data-lucide="ghost" class="text-white w-10 h-10"></i> -->
+                 <img class="rounded-2xl" src="icon.png" alt="">
             </div>
             <h1 class="text-2xl font-bold mb-2">Welcome to DGSnake</h1>
             <p class="text-[var(--text-muted)] text-sm mb-8">A premium snake experience.</p>
@@ -285,7 +300,8 @@
         <div class="flex justify-between items-center mt-8 mb-12">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center shadow-[0_0_20px_var(--accent-glow)]">
-                    <i data-lucide="ghost" class="text-white w-6 h-6"></i>
+                    <!-- <i data-lucide="ghost" class="text-white w-6 h-6"></i> -->
+                     <img class="rounded-xl" src="icon.png" alt="">
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight">DGSnake</h1>
@@ -362,11 +378,11 @@
         <div id="controls-area" class="flex-grow flex flex-col justify-center p-4 w-full max-w-[500px] mx-auto opacity-0 transition-opacity duration-300">
             <div class="control-grid">
                 <div></div>
-                <button class="dpad-btn" data-dir="up"><i data-lucide="chevron-up" class="w-8 h-8"></i></button>
+                <button class="dpad-btn" data-dir="up"><i data-lucide="chevron-up" class="w-12 h-14"></i></button>
                 <div></div>
-                <button class="dpad-btn" data-dir="left"><i data-lucide="chevron-left" class="w-8 h-8"></i></button>
-                <button class="dpad-btn" data-dir="down"><i data-lucide="chevron-down" class="w-8 h-8"></i></button>
-                <button class="dpad-btn" data-dir="right"><i data-lucide="chevron-right" class="w-8 h-8"></i></button>
+                <button class="dpad-btn" data-dir="left"><i data-lucide="chevron-left" class="w-12 h-14"></i></button>
+                <button class="dpad-btn" data-dir="down"><i data-lucide="chevron-down" class="w-12 h-14"></i></button>
+                <button class="dpad-btn" data-dir="right"><i data-lucide="chevron-right" class="w-12 h-14"></i></button>
             </div>
             <p id="swipe-hint" class="text-center text-[var(--text-muted)] text-sm mt-6 font-medium tracking-wide">
                 Swipe anywhere to move
@@ -388,7 +404,7 @@
             <!-- Player Info -->
             <div class="premium-card p-5">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)] mb-4">Player</h3>
-                <div class="flex gap-3">
+                <div class="flex gap-2">
                     <input type="text" id="setting-player-name" class="flex-grow px-3 py-2 rounded-lg text-sm" placeholder="Player Name">
                     <button id="btn-update-name" class="premium-btn-primary px-4 py-2 rounded-lg text-sm font-semibold">Update</button>
                 </div>
@@ -443,8 +459,8 @@
             </div>
 
             <!-- Danger Zone -->
-            <div class="premium-card p-5 border border-red-500/20">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-red-500 mb-4">Danger Zone</h3>
+            <div class="premium-card p-5 border border-red-500/50">
+                <!-- <h3 class="text-xs font-bold uppercase tracking-wider text-red-500 mb-4">Danger Zone</h3> -->
                 <div class="flex flex-col gap-3">
                     <button id="btn-reset-history" class="premium-btn w-full py-3 rounded-lg text-sm text-red-400 hover:bg-red-500/10 border-red-500/20">
                         Clear Score History
@@ -495,8 +511,8 @@
         const DEFAULT_DATA = {
             profile: { name: '' },
             settings: { 
-                theme: 'dark', 
-                controls: 'swipe', 
+                theme: 'light', 
+                controls: 'buttons', 
                 walls: true, 
                 sound: true, 
                 haptics: true 
@@ -748,13 +764,13 @@
                 // Eat food
                 if (head.x === this.food.x && head.y === this.food.y) {
                     FX.eat();
-                    this.score++;
+                    this.score += 5;
                     
                     // Level progression
-                    let newLevel = Math.floor(this.score / 5) + 1;
+                    let newLevel = Math.floor(this.score / 50) + 1;
                     if(newLevel > this.level) {
                         this.level = newLevel;
-                        this.speed = Math.max(70, 220 - (this.level * 12)); // Speed cap
+                        this.speed = Math.max(70, 190 - (this.level * 12)); // Speed cap
                         FX.levelUp();
                     }
                     
